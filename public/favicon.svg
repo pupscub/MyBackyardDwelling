@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+  <!-- Background -->
+  <rect width="32" height="32" rx="6" fill="#f8fafc" />
+  <!-- House outline -->
+  <path d="M6 14V25a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V14" stroke="#2c3e50" stroke-width="2" fill="none"/>
+  <!-- Roof -->
+  <path d="M26 14L16 5L6 14" stroke="#2c3e50" stroke-width="2" fill="#e9f5ff"/>
+  <!-- Door -->
+  <path d="M13 27V19a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v8" stroke="#2c3e50" stroke-width="2" fill="#d1d5db"/>
+  <!-- Small tree in the "backyard" -->
+  <path d="M22.5 23c0-1.5 1.5-2 1.5-3.5-1 0-1.5-.5-1.5-1.5 0 1-0.5 1.5-1.5 1.5 0 1.5 1.5 2 1.5 3.5z" stroke="#3ba55c" stroke-width="1.5" fill="#3ba55c"/>
+  <!-- Tree trunk -->
+  <line x1="22.5" y1="23" x2="22.5" y2="27" stroke="#8B4513" stroke-width="1.5"/>
+  
+  <!-- Add support for dark mode in browsers that support it -->
+  <style>
+    @media (prefers-color-scheme: dark) {
+      rect:first-of-type {
+        fill: #1e293b;
+      }
+      path:nth-of-type(3) {
+        fill: #475569;
+      }
+    }
+  </style>
+</svg> 
