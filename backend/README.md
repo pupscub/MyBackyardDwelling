@@ -216,3 +216,38 @@ python test_maps_api.py
 ```
 
 The satellite images will now appear on the property analysis page for each property with a valid address. The image quality can be adjusted by changing the size parameter in the URL if needed.
+
+## CSV Database Implementation
+
+The application now uses a simple CSV-based storage solution instead of MySQL/SQLAlchemy. This simplifies deployment and removes the need for database configuration.
+
+### CSV Database Structure
+
+Data is stored in the following CSV files:
+
+- `data/users.csv`: Contains all user information including property analysis data
+
+### Key Features
+
+1. **Thread-safe Operations**: The CSV database implementation uses file locks to ensure thread safety for concurrent operations.
+
+2. **Simple CRUD Operations**: The `csv_database.py` module provides functions for:
+   - `get_all_users()`: Retrieve all users
+   - `get_user_by_id(user_id)`: Get a specific user by ID
+   - `get_user_by_email(email)`: Get a user by email address
+   - `create_user(first_name, last_name, address, email)`: Create a new user
+   - `update_user(user_id, **kwargs)`: Update user fields
+   - `delete_user(user_id)`: Delete a user
+
+3. **Easy Export**: CSV data can be directly exported without conversion
+
+### Benefits of CSV Storage
+
+- No database server required
+- Simple to deploy on any hosting platform
+- Easy to back up (just copy the CSV files)
+- Human-readable data format
+
+### Initial Setup
+
+The CSV files are automatically created when the application first runs, so no additional setup is required.

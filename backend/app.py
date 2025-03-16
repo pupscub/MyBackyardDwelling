@@ -2,13 +2,14 @@ import os
 import json
 import random
 from flask import Flask, request, jsonify, send_file
-from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
-from sqlalchemy.exc import SQLAlchemyError as DatabaseError
 from dataclasses import dataclass
 from export_db_to_csv import export_users_to_csv
+
+# Import our new CSV database module instead of SQLAlchemy
+import csv_database
 
 # Load environment variables
 load_dotenv()
@@ -19,57 +20,10 @@ app = Flask(__name__)
 # Configure CORS to allow requests from frontend
 CORS(app, resources={r"/api/*": {"origins": "*", "supports_credentials": True}})
 
-# Configure database
-# Use environment variables for sensitive information
-db_user = os.getenv("DB_USER", "root")
-db_password = os.getenv("DB_PASSWORD", "")
-db_host = os.getenv("DB_HOST", "localhost")
-db_name = os.getenv("DB_NAME", "mbd_database")
-
-# Use SQLite for now (until MySQL is set up)
-app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///mbd_database.db"
-
-# Uncomment and use MySQL configuration
-# app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://{db_user}:{db_password}@{db_host}/{db_name}"
-
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-# Initialize the database
-db = SQLAlchemy(app)
-
-# Define database models
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String(100), nullable=False)
-    last_name = db.Column(db.String(100), nullable=False)
-    address = db.Column(db.String(255), nullable=False)
-    email = db.Column(db.String(120), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    # Flag to track if analysis has been performed
-    analysis_completed = db.Column(db.Boolean, default=False)
-    # Store analysis results as JSON string
-    analysis_data = db.Column(db.Text, nullable=True)
-
-    def __repr__(self):
-        return f"<User {self.first_name} {self.last_name}>"
-    
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "first_name": self.first_name,
-            "last_name": self.last_name,
-            "address": self.address,
-            "email": self.email,
-            "created_at": self.created_at.isoformat(),
-            "analysis_completed": self.analysis_completed
-        }
-
-# Create database tables
-with app.app_context():
-    db.create_all()
-
-# Import database operations after models are defined
-import database
+# Simple exception class for database errors
+class DatabaseError(Exception):
+    """Custom exception for database errors"""
+    pass
 
 # Mock data function for demonstration
 def generate_mock_analysis(user):
@@ -98,55 +52,63 @@ def generate_mock_analysis(user):
     }
     
     # Possible notes about the property
-    all_notes = [
-        "Property is eligible for detached ADU",
-        "Local regulations allow up to 2-story ADU",
-        "Water and sewer connections available",
-        "Permit processing typically takes 3-4 months",
-        "Solar panel installation recommended for energy efficiency",
-        "Property in historic district - additional review required",
-        "Corner lot allows for flexible ADU placement",
-        "Recent zoning changes may affect ADU regulations"
+    notes = []
+    
+    if allows_adu:
+        note_options = [
+            "Property is eligible for ADU development",
+            "Zoning allows for accessory dwelling units",
+            "Check with local planning department for specific ADU requirements",
+            "Consider consulting with an architect for ADU design options"
+        ]
+        notes.append(random.choice(note_options))
+    else:
+        note_options = [
+            "Current zoning may not permit ADU construction",
+            "Zoning variance might be required for ADU development",
+            "Consider consulting with the planning department about ADU options"
+        ]
+        notes.append(random.choice(note_options))
+    
+    # Random additional notes
+    additional_notes = [
+        "Property is in a neighborhood with growing property values",
+        "Check for utility access for any ADU construction",
+        "Consider solar orientation for optimal energy efficiency",
+        "Verify if property is in a historic district or has special requirements",
+        "Water and sewer connections may require upgrades for additional unit"
     ]
     
-    # Select 3-5 random notes
-    num_notes = random.randint(3, 5) if allows_adu else random.randint(1, 3)
-    notes = random.sample(all_notes, num_notes)
+    # Add 1-3 additional random notes
+    for _ in range(random.randint(1, 3)):
+        note = random.choice(additional_notes)
+        if note not in notes:
+            notes.append(note)
     
-    # If ADU is not allowed, add explanation
-    if not allows_adu:
-        notes.insert(0, "Property does not meet minimum lot size requirements for ADU")
-    
-    # Get Google Maps API key from environment variables
-    maps_api_key = os.environ.get("GOOGLE_MAPS_API_KEY", "")
-    
-    # Generate a Google Maps static image URL with proper address encoding
-    encoded_address = user.address.replace(' ', '+')
-    satellite_url = f"https://maps.googleapis.com/maps/api/staticmap?center={encoded_address}&zoom=18&size=800x400&maptype=satellite&key={maps_api_key}"
-    
-    # If no API key is provided, use a placeholder image
-    if not maps_api_key or maps_api_key == "YOUR_GOOGLE_MAPS_API_KEY":
-        satellite_url = "https://via.placeholder.com/800x400?text=Satellite+Image+Not+Available"
-    
-    # Full analysis data
-    analysis_data = {
-        "address": user.address,
-        "firstName": user.first_name,
-        "lastName": user.last_name,
-        "email": user.email,
+    # Analysis object structure
+    return {
         "propertyDetails": {
+            "address": user.get("address", "Unknown"),
             "lotSize": lot_size,
             "zoning": zoning,
             "allowsAdu": allows_adu,
             "maxAduSize": max_adu_size,
-            "setbacks": setbacks,
-            "additionalNotes": notes
+            "setbacks": setbacks
         },
-        "satelliteImageUrl": satellite_url,
-        "generatedAt": datetime.utcnow().isoformat()
+        "analysisDate": datetime.now().isoformat(),
+        "notes": notes,
+        "constructionEstimate": {
+            "lowEstimate": f"${random.randint(100, 150) * 1000:,}",
+            "highEstimate": f"${random.randint(150, 250) * 1000:,}",
+            "estimateDisclaimer": "Estimates are approximate and subject to change based on specific design, materials, and contractor selection."
+        },
+        "nextSteps": [
+            "Schedule a consultation with a local architect",
+            "Contact your municipality's planning department",
+            "Research local ADU regulations and requirements",
+            "Consider financing options for your ADU project"
+        ]
     }
-    
-    return analysis_data
 
 # API Routes
 @app.route("/api/submit-property", methods=["POST"])
@@ -161,7 +123,7 @@ def submit_property():
                 return jsonify({"error": f"Missing required field: {field}"}), 400
         
         # Check if user with email already exists
-        existing_user = database.get_user_by_email(db, User, data["email"])
+        existing_user = csv_database.get_user_by_email(data["email"])
         if existing_user:
             # In a real app, you might want to check if the address matches too
             # For demo, we'll just return the existing ID
@@ -175,8 +137,7 @@ def submit_property():
             }), 200
         
         # Create new user record
-        user_dict = database.create_user(
-            db, User,
+        user_dict = csv_database.create_user(
             first_name=data["firstName"],
             last_name=data["lastName"],
             address=data["address"],
@@ -191,10 +152,6 @@ def submit_property():
             "redirect": f"/property-analysis?id={user_dict['id']}"
         }), 201
         
-    except DatabaseError as e:
-        # Log the database error
-        print(f"Database error: {str(e)}")
-        return jsonify({"error": "Database error occurred"}), 500
     except Exception as e:
         # Log the error (in a production environment)
         print(f"Error: {str(e)}")
@@ -205,36 +162,30 @@ def submit_property():
 def get_property_analysis(user_id):
     try:
         # Get user by ID
-        user_dict = database.get_user_by_id(db, User, user_id)
-        if not user_dict:
-            return jsonify({"error": "User not found"}), 404
-        
-        # Get the User object directly (for analysis)
-        user = User.query.get(user_id)
+        user = csv_database.get_user_by_id(user_id)
         if not user:
             return jsonify({"error": "User not found"}), 404
         
         # Check if analysis exists
-        if user.analysis_completed and user.analysis_data:
+        if user['analysis_completed'] and user['analysis_data']:
             # Return existing analysis
-            analysis_data = json.loads(user.analysis_data)
+            analysis_data = json.loads(user['analysis_data'])
         else:
             # Generate new analysis
             analysis_data = generate_mock_analysis(user)
             
             # Save analysis to database
-            user.analysis_completed = True
-            user.analysis_data = json.dumps(analysis_data)
-            db.session.commit()
+            csv_database.update_user(
+                user_id, 
+                analysis_completed=True,
+                analysis_data=json.dumps(analysis_data)
+            )
         
         return jsonify({
             "success": True,
             "analysis": analysis_data
         }), 200
         
-    except DatabaseError as e:
-        print(f"Database error: {str(e)}")
-        return jsonify({"error": "Database error occurred"}), 500
     except Exception as e:
         print(f"Error: {str(e)}")
         return jsonify({"error": "An unexpected error occurred"}), 500
@@ -243,28 +194,23 @@ def get_property_analysis(user_id):
 @app.route("/api/admin/submissions", methods=["GET"])
 def get_submissions():
     try:
-        users = database.get_all_users(db, User)
+        users = csv_database.get_all_users()
         return jsonify({
             "success": True,
             "count": len(users),
             "submissions": users
         }), 200
-    except DatabaseError as e:
-        print(f"Database error: {str(e)}")
-        return jsonify({"error": "Database error occurred"}), 500
     except Exception as e:
         print(f"Error: {str(e)}")
         return jsonify({"error": "An unexpected error occurred"}), 500
 
-# Route to export database to CSV
+# Route to export database to CSV (we can use the existing functionality)
 @app.route("/api/admin/export-csv", methods=["GET"])
 def export_csv():
     try:
-        csv_file = export_users_to_csv()
-        if csv_file:
-            return send_file(csv_file, as_attachment=True)
-        else:
-            return jsonify({"error": "Failed to generate CSV file"}), 500
+        # Since our data is already in CSV, we can just send the file directly
+        return send_file(csv_database.USERS_CSV, as_attachment=True, 
+                        download_name=f"user_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv")
     except Exception as e:
         print(f"Error exporting CSV: {str(e)}")
         return jsonify({"error": "Failed to generate CSV file", "details": str(e)}), 500
@@ -276,6 +222,15 @@ def health_check():
     return jsonify({
         "status": "healthy",
         "message": "API is running"
+    }), 200
+
+# Route to serve the main page
+@app.route("/api", methods=["GET"])
+def api_root():
+    """API root endpoint"""
+    return jsonify({
+        "message": "It works!",
+        "version": "Python 3.10.16"
     }), 200
 
 # Run the application
