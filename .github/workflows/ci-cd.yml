@@ -54,6 +54,18 @@ jobs:
         cd backend
         pip install flake8
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || true
+  
+  # Simple build job with minimal configuration
+  simple-build:
+    runs-on: ubuntu-latest
+    needs: [frontend-test, backend-test]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+      
+    - name: Echo test
+      run: echo "This is a simple test step"
     
   # Temporarily commented out for debugging
   # build-and-push:
