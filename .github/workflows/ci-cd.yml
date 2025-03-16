@@ -55,56 +55,57 @@ jobs:
         pip install flake8
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || true
     
-  build-and-push:
-    name: Build and Create Artifacts
-    needs: [frontend-test, backend-test]
-    # Only run this job if we're on main branch (not on PRs)
-    if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0  # Full history for potential versioning
-    
-    - name: Debug environment
-      run: |
-        pwd
-        ls -la
-        echo "GitHub ref: ${{ github.ref }}"
-        echo "Event name: ${{ github.event_name }}"
-    
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-        cache: 'npm'  # Cache npm dependencies
-    
-    - name: Install frontend dependencies
-      run: npm ci
-      
-    - name: Build frontend
-      run: |
-        npm run build
-        echo "Build completed. Contents of current directory:"
-        ls -la
-        echo "Contents of dist directory (if it exists):"
-        ls -la dist || echo "No dist directory found"
-    
-    - name: Archive frontend production artifacts
-      if: success()
-      uses: actions/upload-artifact@v3
-      with:
-        name: frontend-dist
-        path: dist
-        retention-days: 7
-        if-no-files-found: warn
-        
-    - name: Archive backend code
-      if: success()
-      uses: actions/upload-artifact@v3
-      with:
-        name: backend-code
-        path: backend
-        retention-days: 7 
+  # Temporarily commented out for debugging
+  # build-and-push:
+  #   name: Build and Create Artifacts
+  #   needs: [frontend-test, backend-test]
+  #   # Only run this job if we're on main branch (not on PRs)
+  #   if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+  #   runs-on: ubuntu-latest
+  #   
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v3
+  #     with:
+  #       fetch-depth: 0  # Full history for potential versioning
+  #   
+  #   - name: Debug environment
+  #     run: |
+  #       pwd
+  #       ls -la
+  #       echo "GitHub ref: ${{ github.ref }}"
+  #       echo "Event name: ${{ github.event_name }}"
+  #   
+  #   - name: Set up Node.js
+  #     uses: actions/setup-node@v3
+  #     with:
+  #       node-version: '18'
+  #       cache: 'npm'  # Cache npm dependencies
+  #   
+  #   - name: Install frontend dependencies
+  #     run: npm ci
+  #     
+  #   - name: Build frontend
+  #     run: |
+  #       npm run build
+  #       echo "Build completed. Contents of current directory:"
+  #       ls -la
+  #       echo "Contents of dist directory (if it exists):"
+  #       ls -la dist || echo "No dist directory found"
+  #   
+  #   - name: Archive frontend production artifacts
+  #     if: success()
+  #     uses: actions/upload-artifact@v3
+  #     with:
+  #       name: frontend-dist
+  #       path: dist
+  #       retention-days: 7
+  #       if-no-files-found: warn
+  #       
+  #   - name: Archive backend code
+  #     if: success()
+  #     uses: actions/upload-artifact@v3
+  #     with:
+  #       name: backend-code
+  #       path: backend
+  #       retention-days: 7 

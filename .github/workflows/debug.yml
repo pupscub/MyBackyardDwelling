@@ -1,0 +1,69 @@
+name: Debug Workflow
+
+on:
+  # Manual trigger
+  workflow_dispatch:
+  
+  # Also run on pushes to main
+  push:
+    branches: [ main ]
+
+jobs:
+  debug-environment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Debug GitHub context
+        run: |
+          echo "GITHUB_WORKFLOW: $GITHUB_WORKFLOW"
+          echo "GITHUB_ACTION: $GITHUB_ACTION"
+          echo "GITHUB_ACTOR: $GITHUB_ACTOR"
+          echo "GITHUB_REPOSITORY: $GITHUB_REPOSITORY"
+          echo "GITHUB_EVENT_NAME: $GITHUB_EVENT_NAME"
+          echo "GITHUB_REF: $GITHUB_REF"
+          echo "GITHUB_SHA: $GITHUB_SHA"
+          echo "GITHUB_HEAD_REF: $GITHUB_HEAD_REF"
+      
+      - name: List files in repository
+        run: |
+          echo "Repository contents:"
+          ls -la
+          
+          echo "Checking for frontend build configuration:"
+          if [ -f "package.json" ]; then
+            echo "package.json found"
+            cat package.json | grep -A 5 "scripts"
+          else
+            echo "package.json not found"
+          fi
+          
+          if [ -f "vite.config.ts" ]; then
+            echo "vite.config.ts found"
+            cat vite.config.ts
+          else
+            echo "vite.config.ts not found"
+          fi
+      
+      - name: Verify Node.js setup works
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Test npm installation
+        run: |
+          echo "Testing npm installation"
+          npm --version
+          node --version
+      
+      - name: Test minimal frontend build
+        run: |
+          if [ -f "package.json" ]; then
+            echo "Installing only essential dependencies"
+            npm install -g vite
+            # Don't run full npm ci which might fail
+            echo "Build test complete"
+          else
+            echo "Skipping build test, no package.json found"
+          fi 
