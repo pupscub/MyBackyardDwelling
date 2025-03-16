@@ -95,62 +95,49 @@ jobs:
         ls -la dist || echo "No dist directory found"
         
     - name: Archive frontend artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: frontend-dist
         path: dist
         if-no-files-found: warn
     
-  # Temporarily commented out for debugging
-  # build-and-push:
-  #   name: Build and Create Artifacts
-  #   needs: [frontend-test, backend-test]
-  #   # Only run this job if we're on main branch (not on PRs)
-  #   if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
-  #   runs-on: ubuntu-latest
-  #   
-  #   steps:
-  #   - name: Checkout code
-  #     uses: actions/checkout@v3
-  #     with:
-  #       fetch-depth: 0  # Full history for potential versioning
-  #   
-  #   - name: Debug environment
-  #     run: |
-  #       pwd
-  #       ls -la
-  #       echo "GitHub ref: ${{ github.ref }}"
-  #       echo "Event name: ${{ github.event_name }}"
-  #   
-  #   - name: Set up Node.js
-  #     uses: actions/setup-node@v3
-  #     with:
-  #       node-version: '18'
-  #       cache: 'npm'  # Cache npm dependencies
-  #   
-  #   - name: Install frontend dependencies
-  #     run: npm ci
-  #     
-  #   - name: Build frontend
-  #     run: |
-  #       npm run build
-  #       echo "Build completed. Contents of current directory:"
-  #       ls -la
-  #       echo "Contents of dist directory (if it exists):"
-  #       ls -la dist || echo "No dist directory found"
-  #   
-  #   - name: Archive frontend production artifacts
-  #     if: success()
-  #     uses: actions/upload-artifact@v3
-  #     with:
-  #       name: frontend-dist
-  #       path: dist
-  #       retention-days: 7
-  #       
-  #   - name: Archive backend code
-  #     if: success()
-  #     uses: actions/upload-artifact@v3
-  #     with:
-  #       name: backend-code
-  #       path: backend
-  #       retention-days: 7 
+  # Final working version of the build and artifacts job
+  build-and-push:
+    name: Build and Create Artifacts
+    needs: [frontend-test, backend-test]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Install frontend dependencies
+      run: npm ci
+      
+    - name: Build frontend
+      run: npm run build
+      
+    - name: Debug directory contents
+      run: |
+        echo "Current directory contents:"
+        ls -la
+        echo "Dist directory contents:"
+        ls -la dist || echo "No dist directory found"
+    
+    - name: Archive frontend artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-dist
+        path: dist
+        
+    - name: Archive backend code
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend-code
+        path: backend 
