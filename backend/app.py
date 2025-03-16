@@ -6,7 +6,7 @@ from flask_cors import CORS
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from dataclasses import dataclass
-import pg_database  # Import our new Postgres database module
+import pg_database_mock as pg_database  # Import our mock database module
 
 # Load environment variables
 load_dotenv()
@@ -263,7 +263,7 @@ def api_root():
     return jsonify({
         "message": "It works!",
         "version": "Python 3.10.16",
-        "database": "Vercel Postgres"
+        "database": "Mock Database (for testing)"
     }), 200
 
 # Run the application
