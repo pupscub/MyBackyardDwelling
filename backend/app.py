@@ -6,10 +6,7 @@ from flask_cors import CORS
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from dataclasses import dataclass
-from export_db_to_csv import export_users_to_csv
-
-# Import our new CSV database module instead of SQLAlchemy
-import csv_database
+import pg_database  # Import our new Postgres database module
 
 # Load environment variables
 load_dotenv()
@@ -19,6 +16,10 @@ app = Flask(__name__)
 
 # Configure CORS to allow requests from frontend
 CORS(app, resources={r"/api/*": {"origins": "*", "supports_credentials": True}})
+
+# Initialize the database tables
+with app.app_context():
+    pg_database.init_db()
 
 # Simple exception class for database errors
 class DatabaseError(Exception):
@@ -85,18 +86,33 @@ def generate_mock_analysis(user):
         if note not in notes:
             notes.append(note)
     
+    # Get Google Maps API key from environment variables
+    maps_api_key = os.environ.get("GOOGLE_MAPS_API_KEY", "")
+    
+    # Generate a Google Maps static image URL with proper address encoding
+    encoded_address = user.get("address", "").replace(' ', '+')
+    satellite_url = f"https://maps.googleapis.com/maps/api/staticmap?center={encoded_address}&zoom=18&size=800x400&maptype=satellite&key={maps_api_key}"
+    
+    # If no API key is provided, use a placeholder image
+    if not maps_api_key or maps_api_key == "YOUR_GOOGLE_MAPS_API_KEY":
+        satellite_url = "https://via.placeholder.com/800x400?text=Satellite+Image+Not+Available"
+    
     # Analysis object structure
     return {
+        "address": user.get("address", "Unknown"),
+        "firstName": user.get("first_name", ""),
+        "lastName": user.get("last_name", ""),
+        "email": user.get("email", ""),
         "propertyDetails": {
-            "address": user.get("address", "Unknown"),
             "lotSize": lot_size,
             "zoning": zoning,
             "allowsAdu": allows_adu,
             "maxAduSize": max_adu_size,
-            "setbacks": setbacks
+            "setbacks": setbacks,
+            "additionalNotes": notes
         },
-        "analysisDate": datetime.now().isoformat(),
-        "notes": notes,
+        "satelliteImageUrl": satellite_url,
+        "generatedAt": datetime.now().isoformat(),
         "constructionEstimate": {
             "lowEstimate": f"${random.randint(100, 150) * 1000:,}",
             "highEstimate": f"${random.randint(150, 250) * 1000:,}",
@@ -123,7 +139,7 @@ def submit_property():
                 return jsonify({"error": f"Missing required field: {field}"}), 400
         
         # Check if user with email already exists
-        existing_user = csv_database.get_user_by_email(data["email"])
+        existing_user = pg_database.get_user_by_email(data["email"])
         if existing_user:
             # In a real app, you might want to check if the address matches too
             # For demo, we'll just return the existing ID
@@ -137,7 +153,7 @@ def submit_property():
             }), 200
         
         # Create new user record
-        user_dict = csv_database.create_user(
+        user_dict = pg_database.create_user(
             first_name=data["firstName"],
             last_name=data["lastName"],
             address=data["address"],
@@ -162,7 +178,7 @@ def submit_property():
 def get_property_analysis(user_id):
     try:
         # Get user by ID
-        user = csv_database.get_user_by_id(user_id)
+        user = pg_database.get_user_by_id(user_id)
         if not user:
             return jsonify({"error": "User not found"}), 404
         
@@ -175,7 +191,7 @@ def get_property_analysis(user_id):
             analysis_data = generate_mock_analysis(user)
             
             # Save analysis to database
-            csv_database.update_user(
+            pg_database.update_user(
                 user_id, 
                 analysis_completed=True,
                 analysis_data=json.dumps(analysis_data)
@@ -194,7 +210,7 @@ def get_property_analysis(user_id):
 @app.route("/api/admin/submissions", methods=["GET"])
 def get_submissions():
     try:
-        users = csv_database.get_all_users()
+        users = pg_database.get_all_users()
         return jsonify({
             "success": True,
             "count": len(users),
@@ -204,13 +220,29 @@ def get_submissions():
         print(f"Error: {str(e)}")
         return jsonify({"error": "An unexpected error occurred"}), 500
 
-# Route to export database to CSV (we can use the existing functionality)
+# Route to export database to CSV
 @app.route("/api/admin/export-csv", methods=["GET"])
 def export_csv():
     try:
-        # Since our data is already in CSV, we can just send the file directly
-        return send_file(csv_database.USERS_CSV, as_attachment=True, 
-                        download_name=f"user_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv")
+        # Create a temporary CSV file with all user data
+        users = pg_database.get_all_users()
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        csv_filename = f"/tmp/user_data_{timestamp}.csv"
+        
+        # Ensure exports directory exists
+        os.makedirs(os.path.dirname(csv_filename), exist_ok=True)
+        
+        # Write data to CSV
+        import csv
+        with open(csv_filename, 'w', newline='') as csvfile:
+            fieldnames = ['id', 'first_name', 'last_name', 'address', 'email', 'created_at', 'analysis_completed']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for user in users:
+                writer.writerow(user)
+        
+        return send_file(csv_filename, as_attachment=True, 
+                         download_name=f"user_data_{timestamp}.csv")
     except Exception as e:
         print(f"Error exporting CSV: {str(e)}")
         return jsonify({"error": "Failed to generate CSV file", "details": str(e)}), 500
@@ -230,7 +262,8 @@ def api_root():
     """API root endpoint"""
     return jsonify({
         "message": "It works!",
-        "version": "Python 3.10.16"
+        "version": "Python 3.10.16",
+        "database": "Vercel Postgres"
     }), 200
 
 # Run the application

@@ -95,15 +95,30 @@ The server will start at `http://localhost:5000` by default.
   }
   ```
 
-## Database
+## Database Options
 
-By default, the application uses SQLite for development, which requires no additional setup.
+The application supports multiple database options:
 
-To use a different database:
+### 1. Vercel Postgres (Recommended for Vercel deployment)
 
-1. Edit the `.env` file and update the database configuration.
-2. Uncomment the appropriate database connection string in `app.py`.
-3. Install the required database driver if needed.
+The application is configured to work with Vercel Postgres, which is a managed PostgreSQL database service provided by Vercel.
+
+To set up Vercel Postgres:
+- See the detailed instructions in [VERCEL_POSTGRES_SETUP.md](VERCEL_POSTGRES_SETUP.md)
+
+### 2. CSV-Based Storage
+
+For simple deployment or development, the application can use CSV files for data storage:
+- Create a `data` directory in the backend folder
+- See documentation in the `csv_database.py` file for details
+- Note: CSV storage is not recommended for production use on serverless platforms like Vercel
+
+### 3. MySQL/SQLAlchemy
+
+The application also supports MySQL via SQLAlchemy:
+- Configure database credentials in the `.env` file
+- Uncomment the SQLAlchemy configuration in `app.py`
+- Run `python setup_mysql.py` to set up the database
 
 ## Production Deployment
 
