@@ -107,7 +107,7 @@ EOF
 # Update README with Vercel and Supabase focus
 echo "Updating README.md with Vercel and Supabase focus..."
 cat > README.md << 'EOF'
-# Backyard Magic - ADU Property Analysis
+# Backyard Dwelling - ADU Property Analysis
 
 This application allows users to submit a property address and receive ADU (Accessory Dwelling Unit) potential analysis for their property. The service provides information on zoning rules, setback requirements, and ADU eligibility, with a special focus on Massachusetts properties.
 

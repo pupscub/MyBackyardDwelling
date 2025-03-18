@@ -534,7 +534,7 @@ export default function PropertyAnalysis() {
               alt="House Icon" 
               className="h-6 w-6" 
             />
-            <span>Backyard Magic</span>
+            <span>My Backyard Dwelling</span>
           </Link>
           <Button asChild variant="outline" size="sm">
             <Link to="/">
@@ -617,7 +617,7 @@ export default function PropertyAnalysis() {
                 
                 <Button asChild>
                   <a 
-                    href="mailto:info@backyardmagic.com?subject=Service%20Area%20Expansion%20Request"
+                    href="mailto:info@mybackyarddwelling.com?subject=Service%20Area%20Expansion%20Request"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -914,7 +914,7 @@ export default function PropertyAnalysis() {
         <div className="container px-4">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className={isDarkTheme ? "text-gray-400" : "text-gray-600"}>
-              &copy; {new Date().getFullYear()} Backyard Magic. All rights reserved.
+              &copy; {new Date().getFullYear()} My Backyard Dwelling. All rights reserved.
             </p>
             <div className="flex gap-4">
               <Link to="/" className={isDarkTheme ? "text-gray-400 hover:text-white" : "text-gray-600 hover:text-gray-900"}>
