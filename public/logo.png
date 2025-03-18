@@ -1,2 +1,12 @@
-
-public/lovable-uploads/45446126-8303-4571-905c-32782ef36a08.png
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- House outline -->
+  <path d="M3 10.25V19a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-8.75" stroke="#2c3e50" fill="none"/>
+  <!-- Roof -->
+  <path d="M21 10L12 3L3 10" stroke="#2c3e50" fill="#e9f5ff"/>
+  <!-- Door -->
+  <path d="M9 21V15a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v6" stroke="#2c3e50" fill="#d1d5db"/>
+  <!-- Small tree in the "backyard" -->
+  <path d="M18.5 18c0-1.5 1.5-2 1.5-3.5-1 0-1.5-.5-1.5-1.5 0 1-0.5 1.5-1.5 1.5 0 1.5 1.5 2 1.5 3.5z" stroke="#3ba55c" fill="#3ba55c"/>
+  <!-- Tree trunk -->
+  <line x1="18.5" y1="18" x2="18.5" y2="21" stroke="#8B4513" stroke-width="1.5"/>
+</svg> 
