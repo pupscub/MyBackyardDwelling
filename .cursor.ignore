@@ -1,0 +1,46 @@
+# Cursor.ignore file - prevents specified files from being used for training
+
+# Environment variables and API keys
+.env
+.env.*
+*.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Other potential files with secrets
+**/secrets.*
+**/*config*json
+**/*secret*
+**/*key*
+**/*token*
+**/*password*
+**/*credential*
+**/auth*
+
+# Specific file paths that might contain sensitive info
+.vercel
+supabase/.env
+
+# Large binary or data files (good practice)
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+*.jpeg
+*.jpg
+*.png
+*.gif
+*.mp4
+*.mov
+*.mp3
+*.wav
+*.pdf
+
+# Node modules and build directories
+node_modules/
+dist/
+build/
+.next/ 
