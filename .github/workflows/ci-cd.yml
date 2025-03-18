@@ -37,50 +37,11 @@ jobs:
           name: frontend-build
           path: dist/
           if-no-files-found: error
-  
-  backend:
-    name: Backend Test
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.9'
-          cache: 'pip'
-      
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          cd backend
-          pip install -r requirements.txt
-      
-      - name: Run tests
-        run: |
-          cd backend
-          python -m pytest || echo "No tests found"
-      
-      - name: Run linter
-        run: |
-          cd backend
-          pip install flake8
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || true
-      
-      - name: Archive backend code
-        if: github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-code
-          path: backend/
-          if-no-files-found: error
 
   deploy-artifacts:
     name: Prepare Deployment Artifacts
     if: github.ref == 'refs/heads/main'
-    needs: [frontend, backend]
+    needs: [frontend]
     runs-on: ubuntu-latest
     
     steps:
@@ -96,8 +57,6 @@ jobs:
         run: |
           mkdir -p deploy
           cp -r artifacts/frontend-build/* deploy/
-          mkdir -p deploy/backend
-          cp -r artifacts/backend-code/* deploy/backend/
           cd deploy
           zip -r ../deploy-package.zip .
       
