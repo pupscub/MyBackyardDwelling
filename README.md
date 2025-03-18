@@ -1,85 +1,59 @@
-# MyBackyardDwelling - ADU Property Analysis Platform
+# Backyard Magic - ADU Property Analysis
 
-MyBackyardDwelling is a web application that helps property owners determine the potential for building an Accessory Dwelling Unit (ADU) on their property. The platform analyzes property details, local zoning laws, and building regulations to provide tailored recommendations.
-
-## Features
-
-- AI-powered property analysis based on address
-- Custom ADU design recommendations
-- Permit expedition guidance
-- Interactive property visualization with Google Maps satellite imagery
-- Comprehensive property reports with zoning, setbacks, and ADU potential
+This application allows users to submit a property address and receive ADU (Accessory Dwelling Unit) potential analysis for their property. The service provides information on zoning rules, setback requirements, and ADU eligibility, with a special focus on Massachusetts properties.
 
 ## Technology Stack
 
-- **Frontend**: React, TypeScript, Tailwind CSS
-- **Backend**: Flask (Python)
-- **Database**: SQLite (development), MySQL (production)
-- **APIs**: Google Maps Static API
+- **Frontend**: React + TypeScript + Vite
+- **Styling**: TailwindCSS + shadcn/ui
+- **State Management**: React Context + React Query
+- **Deployment**: Vercel
+- **Backend**: Supabase (PostgreSQL + Auth)
+- **Mapping**: Google Maps Static API
 
-## Setup Instructions
+## Local Development
 
-### Prerequisites
-
-- Node.js 16+ and npm/yarn
-- Python 3.8+
-- Git
-
-### Frontend Setup
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/mybackyarddwelling.git
-   cd mybackyarddwelling
-   ```
-
-2. Install dependencies:
+1. Clone the repository
+2. Copy `.env.example` to `.env` and fill in your Supabase and Google Maps API credentials
+3. Install dependencies:
    ```bash
    npm install
    ```
-
-3. Start the development server:
+4. Start the development server:
    ```bash
    npm run dev
    ```
 
-### Backend Setup
+## Supabase Setup
 
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
+This project requires a Supabase project with the following setup:
 
-2. Create and activate a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+1. Create a new Supabase project
+2. Run the SQL script in `sql/supabase-setup.sql` in the SQL Editor
+3. Add your Supabase URL and anon key to the `.env` file
 
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+## Deployment to Vercel
 
-4. Set up environment variables:
-   ```bash
-   cp .env.example .env
-   # Edit .env file with your credentials
-   ```
+1. Push your repository to GitHub
+2. Import the repository in Vercel
+3. Add the following environment variables:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+   - `VITE_GOOGLE_MAPS_API_KEY`
+4. Deploy
 
-5. Start the backend server:
-   ```bash
-   python app.py
-   ```
+## Testing
 
-## Deployment
+Testing utilities are available in the `test/` directory. See `test/README.md` for more information on how to use these utilities.
 
-See the [DEPLOYMENT.md](DEPLOYMENT.md) file for detailed deployment instructions.
+## Features
+
+- Property form with validation
+- Massachusetts-only service checking
+- Google Maps satellite imagery
+- Property analysis with ADU potential information
+- Responsive design for all devices
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Contact
-
-For questions or support, please contact [info@mybackyarddwelling.com](mailto:info@mybackyarddwelling.com).
+This project is proprietary and confidential.

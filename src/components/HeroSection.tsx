@@ -1,107 +1,153 @@
-import { useState } from "react";
-import { ArrowRight, CheckCircle2, AlertCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowRight, CheckCircle2, AlertCircle, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/ui/theme-provider";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MapPin, Check, Send, Loader2 } from "lucide-react";
+import { usePropertyApi } from "@/hooks/use-property-api";
 
-// Define API base URL - can be moved to environment config
-// Use relative URL to avoid CORS issues
-const API_BASE_URL = "/api";  // Changed from http://localhost:5001/api
+// Define environment variable for API base URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
 const HeroSection = () => {
+  const { loading, error: apiError, submitProperty } = usePropertyApi();
+  
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    address: "",
-    email: "",
+    street: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    firstName: '',
+    lastName: '',
+    email: ''
   });
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const [formStep, setFormStep] = useState(0);
+  const [submissionId, setSubmissionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { theme } = useTheme();
   const isDarkTheme = theme === 'dark';
   const navigate = useNavigate();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear error when user starts typing again
-    if (error) setError(null);
+    setFormData({
+      ...formData,
+      [name]: value
+    });
   };
 
+  // Update error state when apiError changes
+  useEffect(() => {
+    if (apiError) {
+      setError(apiError);
+    }
+  }, [apiError]);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
     setError(null);
     
     try {
-      console.log("Submitting form data:", formData);
+      // Enhanced validation with specific field checks
+      const missingFields = [];
       
-      // Basic validation
-      if (!formData.firstName || !formData.lastName || !formData.address || !formData.email) {
-        throw new Error("Please fill out all required fields");
+      if (!formData.firstName.trim()) missingFields.push('First Name');
+      if (!formData.lastName.trim()) missingFields.push('Last Name');
+      if (!formData.email.trim()) missingFields.push('Email');
+      if (!formData.street.trim()) missingFields.push('Street Address');
+      if (!formData.city.trim()) missingFields.push('City');
+      if (!formData.state.trim()) missingFields.push('State');
+      if (!formData.zipCode.trim()) missingFields.push('Zip Code');
+      
+      // If any fields are missing, show specific error message
+      if (missingFields.length > 0) {
+        setError(`Please fill out the following required fields: ${missingFields.join(', ')}`);
+        return;
       }
       
-      // Send data to our backend API
-      const response = await fetch(`${API_BASE_URL}/submit-property`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-        // Add credentials to ensure cookies are sent
-        credentials: "include"
+      // Email format validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        setError('Please enter a valid email address');
+        return;
+      }
+      
+      // State validation (2 characters)
+      if (formData.state.trim().length !== 2) {
+        setError('State should be a 2-letter code (e.g., MA, NY, CA)');
+        return;
+      }
+      
+      // Zip code validation (5 digits)
+      const zipRegex = /^\d{5}$/;
+      if (!zipRegex.test(formData.zipCode)) {
+        setError('Please enter a valid 5-digit ZIP code');
+        return;
+      }
+      
+      // Format the complete address with proper formatting
+      const fullAddress = `${formData.street}, ${formData.city}, ${formData.state} ${formData.zipCode}`;
+      
+      console.log("Submitting with formatted address:", fullAddress);
+      
+      // Submit to API
+      const submissionId = await submitProperty({
+        address: fullAddress,
+        street: formData.street,
+        city: formData.city,
+        state: formData.state,
+        zip_code: formData.zipCode,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        email: formData.email
       });
       
-      console.log("Response status:", response.status);
-      
-      // Try to parse the response as JSON
-      let result;
-      try {
-        result = await response.json();
-        console.log("Response data:", result);
-      } catch (jsonError) {
-        console.error("Error parsing JSON response:", jsonError);
-        throw new Error("Failed to parse server response. Is the server running?");
-      }
-      
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to submit form");
-      }
-      
-      console.log("Form submitted successfully:", result);
-      
-      // Store the form data in localStorage as a fallback
-      localStorage.setItem('propertyFormData', JSON.stringify(formData));
-      
-      // Check if there's a redirect URL in the response
-      if (result.redirect) {
-        console.log("Will redirect to:", result.redirect);
-        setFormStep(1); // Move to success state before navigation
+      if (submissionId) {
+        // Store ID in session storage as backup
+        try {
+          sessionStorage.setItem('lastPropertySubmissionId', submissionId);
+          // Also store form data with timestamp in local storage as fallback
+          localStorage.setItem('propertyFormData', JSON.stringify({
+            address: fullAddress,
+            street: formData.street,
+            city: formData.city,
+            state: formData.state,
+            zipCode: formData.zipCode,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            timestamp: new Date().toISOString()
+          }));
+        } catch (err) {
+          console.error('Failed to store submission data in storage:', err);
+        }
         
-        // Allow time for the success message to be seen
+        setSubmissionId(submissionId);
+        setFormStep(1);
+        
+        // Create the navigation URL
+        const navigationUrl = `/property-analysis?id=${submissionId}&skipLoading=true`;
+        console.log(`NAVIGATION: Will redirect to ${navigationUrl} in 3 seconds`);
+        
+        // Increased delay to 3 seconds to ensure user sees the thank you message
         setTimeout(() => {
-          console.log("Navigating to:", result.redirect);
-          // Use navigate instead of direct window.location to avoid page reload
-          navigate(result.redirect);
-        }, 1500);
+          console.log("Navigating to property analysis page with ID:", submissionId);
+          navigate(navigationUrl);
+        }, 3000);
       } else {
-        // If no redirect but successful submission, just show success
-        setFormStep(1); 
+        console.error("No submission ID returned from API");
+        setError('Failed to submit property analysis request. Please try again.');
       }
-    } catch (err) {
-      console.error("Error submitting form:", err);
-      setError(err instanceof Error ? err.message : "An unexpected error occurred. Please try again.");
-    } finally {
-      setIsSubmitting(false);
+    } catch (err: any) {
+      console.error('Error in handleSubmit:', err);
+      setError(err.message || 'Failed to submit. Please try again later.');
     }
   };
 
@@ -194,7 +240,24 @@ const HeroSection = () => {
                   {error && (
                     <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-start">
                       <AlertCircle size={20} className="mr-2 flex-shrink-0 mt-0.5" />
-                      <span>{error}</span>
+                      <div className="flex-1">
+                        <span>{error}</span>
+                        {(error.includes('supabase') || 
+                          error.includes('database') || 
+                          error.includes('setup') || 
+                          error.includes('policy') || 
+                          error.includes('table')) && (
+                          <div className="mt-2">
+                            <Link 
+                              to="/supabase-setup" 
+                              className="text-blue-600 hover:underline font-medium inline-flex items-center"
+                            >
+                              Run Supabase Setup Wizard
+                              <ChevronRight size={16} className="ml-1" />
+                            </Link>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                   
@@ -214,6 +277,7 @@ const HeroSection = () => {
                           value={formData.firstName}
                           onChange={handleChange}
                           required
+                          minLength={1}
                           className={cn(
                             "w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-brand-200 focus:border-brand-500 transition-standard text-gray-800",
                             isDarkTheme ? "border-gray-600 bg-gray-700 text-white" : "border-gray-300 bg-white text-gray-800"
@@ -236,6 +300,7 @@ const HeroSection = () => {
                           value={formData.lastName}
                           onChange={handleChange}
                           required
+                          minLength={1}
                           className={cn(
                             "w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-brand-200 focus:border-brand-500 transition-standard text-gray-800",
                             isDarkTheme ? "border-gray-600 bg-gray-700 text-white" : "border-gray-300 bg-white text-gray-800"
@@ -245,26 +310,152 @@ const HeroSection = () => {
                       </div>
                     </div>
                     
+                    {/* Street Address */}
                     <div className="space-y-2">
-                      <label htmlFor="address" className={cn(
+                      <label htmlFor="street" className={cn(
                         "block text-sm font-medium", 
                         isDarkTheme ? "text-gray-200" : "text-gray-700"
                       )}>
-                        Enter Your Address
+                        Street Address
                       </label>
                       <input
                         type="text"
-                        id="address"
-                        name="address"
-                        value={formData.address}
+                        id="street"
+                        name="street"
+                        value={formData.street}
                         onChange={handleChange}
                         required
+                        minLength={3}
                         className={cn(
                           "w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-brand-200 focus:border-brand-500 transition-standard text-gray-800",
                           isDarkTheme ? "border-gray-600 bg-gray-700 text-white" : "border-gray-300 bg-white text-gray-800"
                         )}
-                        placeholder="123 Main St, Boston, MA"
+                        placeholder="123 Main St"
                       />
+                    </div>
+                    
+                    {/* City, State, Zip */}
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2 col-span-1">
+                        <label htmlFor="city" className={cn(
+                          "block text-sm font-medium",
+                          isDarkTheme ? "text-gray-200" : "text-gray-700"
+                        )}>
+                          City
+                        </label>
+                        <input
+                          type="text"
+                          id="city"
+                          name="city"
+                          value={formData.city}
+                          onChange={handleChange}
+                          required
+                          minLength={2}
+                          className={cn(
+                            "w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-brand-200 focus:border-brand-500 transition-standard text-gray-800",
+                            isDarkTheme ? "border-gray-600 bg-gray-700 text-white" : "border-gray-300 bg-white text-gray-800"
+                          )}
+                          placeholder="Boston"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2 col-span-1">
+                        <label htmlFor="state" className={cn(
+                          "block text-sm font-medium",
+                          isDarkTheme ? "text-gray-200" : "text-gray-700"
+                        )}>
+                          State
+                        </label>
+                        <select
+                          id="state"
+                          name="state"
+                          value={formData.state}
+                          onChange={handleChange}
+                          required
+                          className={cn(
+                            "w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-brand-200 focus:border-brand-500 transition-standard",
+                            isDarkTheme ? "border-gray-600 bg-gray-700 text-white" : "border-gray-300 bg-white text-gray-800"
+                          )}
+                        >
+                          <option value="">Select State</option>
+                          <option value="MA">MA - Massachusetts</option>
+                          <option value="AL">AL - Alabama</option>
+                          <option value="AK">AK - Alaska</option>
+                          <option value="AZ">AZ - Arizona</option>
+                          <option value="AR">AR - Arkansas</option>
+                          <option value="CA">CA - California</option>
+                          <option value="CO">CO - Colorado</option>
+                          <option value="CT">CT - Connecticut</option>
+                          <option value="DE">DE - Delaware</option>
+                          <option value="FL">FL - Florida</option>
+                          <option value="GA">GA - Georgia</option>
+                          <option value="HI">HI - Hawaii</option>
+                          <option value="ID">ID - Idaho</option>
+                          <option value="IL">IL - Illinois</option>
+                          <option value="IN">IN - Indiana</option>
+                          <option value="IA">IA - Iowa</option>
+                          <option value="KS">KS - Kansas</option>
+                          <option value="KY">KY - Kentucky</option>
+                          <option value="LA">LA - Louisiana</option>
+                          <option value="ME">ME - Maine</option>
+                          <option value="MD">MD - Maryland</option>
+                          <option value="MI">MI - Michigan</option>
+                          <option value="MN">MN - Minnesota</option>
+                          <option value="MS">MS - Mississippi</option>
+                          <option value="MO">MO - Missouri</option>
+                          <option value="MT">MT - Montana</option>
+                          <option value="NE">NE - Nebraska</option>
+                          <option value="NV">NV - Nevada</option>
+                          <option value="NH">NH - New Hampshire</option>
+                          <option value="NJ">NJ - New Jersey</option>
+                          <option value="NM">NM - New Mexico</option>
+                          <option value="NY">NY - New York</option>
+                          <option value="NC">NC - North Carolina</option>
+                          <option value="ND">ND - North Dakota</option>
+                          <option value="OH">OH - Ohio</option>
+                          <option value="OK">OK - Oklahoma</option>
+                          <option value="OR">OR - Oregon</option>
+                          <option value="PA">PA - Pennsylvania</option>
+                          <option value="RI">RI - Rhode Island</option>
+                          <option value="SC">SC - South Carolina</option>
+                          <option value="SD">SD - South Dakota</option>
+                          <option value="TN">TN - Tennessee</option>
+                          <option value="TX">TX - Texas</option>
+                          <option value="UT">UT - Utah</option>
+                          <option value="VT">VT - Vermont</option>
+                          <option value="VA">VA - Virginia</option>
+                          <option value="WA">WA - Washington</option>
+                          <option value="WV">WV - West Virginia</option>
+                          <option value="WI">WI - Wisconsin</option>
+                          <option value="WY">WY - Wyoming</option>
+                          <option value="DC">DC - District of Columbia</option>
+                        </select>
+                      </div>
+                      
+                      <div className="space-y-2 col-span-1">
+                        <label htmlFor="zipCode" className={cn(
+                          "block text-sm font-medium",
+                          isDarkTheme ? "text-gray-200" : "text-gray-700"
+                        )}>
+                          Zip Code
+                        </label>
+                        <input
+                          type="text"
+                          id="zipCode"
+                          name="zipCode"
+                          value={formData.zipCode}
+                          onChange={handleChange}
+                          required
+                          pattern="[0-9]{5}"
+                          title="Five digit zip code"
+                          inputMode="numeric"
+                          className={cn(
+                            "w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-brand-200 focus:border-brand-500 transition-standard text-gray-800",
+                            isDarkTheme ? "border-gray-600 bg-gray-700 text-white" : "border-gray-300 bg-white text-gray-800"
+                          )}
+                          placeholder="02108"
+                        />
+                      </div>
                     </div>
                     
                     <div className="space-y-2">
@@ -281,6 +472,8 @@ const HeroSection = () => {
                         value={formData.email}
                         onChange={handleChange}
                         required
+                        pattern="[^@\s]+@[^@\s]+\.[^@\s]+"
+                        title="Please enter a valid email address"
                         className={cn(
                           "w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-brand-200 focus:border-brand-500 transition-standard text-gray-800",
                           isDarkTheme ? "border-gray-600 bg-gray-700 text-white" : "border-gray-300 bg-white text-gray-800"
@@ -291,14 +484,14 @@ const HeroSection = () => {
                     
                     <button
                       type="submit"
-                      disabled={isSubmitting}
+                      disabled={loading}
                       className={cn(
                         "w-full py-3 px-4 rounded-lg font-medium text-white transition-standard",
                         "bg-brand-500 hover:bg-brand-600 hover:shadow-md mt-2",
-                        isSubmitting && "opacity-70 cursor-not-allowed"
+                        loading && "opacity-70 cursor-not-allowed"
                       )}
                     >
-                      {isSubmitting ? (
+                      {loading ? (
                         <span className="flex items-center justify-center">
                           <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -332,25 +525,49 @@ const HeroSection = () => {
                     "mb-6 max-w-md mx-auto",
                     isDarkTheme ? "text-gray-300" : "text-gray-600"
                   )}>
-                    We've received your information and will send your property analysis to {formData.email} within 24 hours.
+                    We've received your information and are preparing your property analysis report.
                   </p>
-                  <button 
-                    onClick={() => {
-                      setFormStep(0);
-                      setFormData({
-                        firstName: "",
-                        lastName: "",
-                        address: "",
-                        email: "",
-                      });
-                    }}
+                  
+                  <div className="mt-2 mb-6">
+                    <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                      <div className="bg-brand-500 h-2 rounded-full animate-progress"></div>
+                    </div>
+                  </div>
+                  
+                  <Link 
+                    to={submissionId ? `/property-analysis?id=${submissionId}&skipLoading=true` : "/"}
                     className={cn(
-                      "font-medium",
-                      isDarkTheme ? "text-brand-400 hover:text-brand-300" : "text-brand-600 hover:text-brand-700"
+                      "px-4 py-2 rounded-lg font-medium inline-block mt-2",
+                      isDarkTheme 
+                        ? "bg-brand-600 text-white hover:bg-brand-700" 
+                        : "bg-brand-500 text-white hover:bg-brand-600"
                     )}
                   >
-                    Submit another property
-                  </button>
+                    View Property Analysis Now
+                  </Link>
+
+                  <div className="mt-6 flex justify-center">
+                    <button 
+                      onClick={() => {
+                        setFormStep(0);
+                        setFormData({
+                          firstName: "",
+                          lastName: "",
+                          street: "",
+                          city: "",
+                          state: "",
+                          zipCode: "",
+                          email: "",
+                        });
+                      }}
+                      className={cn(
+                        "text-sm font-medium underline",
+                        isDarkTheme ? "text-gray-400 hover:text-gray-300" : "text-gray-600 hover:text-gray-700"
+                      )}
+                    >
+                      Submit another property
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

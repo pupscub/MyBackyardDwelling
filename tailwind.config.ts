@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -99,6 +98,10 @@ export default {
 					from: { transform: 'translateX(100%)' },
 					to: { transform: 'translateX(0)' },
 				},
+				'progress': {
+					'0%': { width: '0%' },
+					'100%': { width: '100%' },
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -106,6 +109,7 @@ export default {
 				'fade-in': 'fade-in 0.5s ease-out',
 				'fade-up': 'fade-up 0.5s ease-out',
 				'slide-in-right': 'slide-in-right 0.5s ease-out',
+				'progress': 'progress 3s ease-in-out forwards',
 			},
 			boxShadow: {
 				'subtle': '0 1px 2px rgba(0, 0, 0, 0.05)',
