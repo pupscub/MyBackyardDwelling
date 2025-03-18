@@ -1,4 +1,4 @@
-# Backyard Magic Testing Resources
+# My Backyard Dwelling Testing Resources
 
 This directory contains testing and setup utilities that were moved from the main source code to keep the production codebase clean.
 
