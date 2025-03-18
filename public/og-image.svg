@@ -1,0 +1,16 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#f8fafc"/>
+  
+  <!-- Logo -->
+  <g transform="translate(500, 170) scale(8)">
+    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="#1e293b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <polyline points="9 22 9 12 15 12 15 22" stroke="#1e293b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  
+  <!-- Brand Text -->
+  <text x="600" y="420" font-family="Inter, sans-serif" font-size="64" font-weight="700" text-anchor="middle" fill="#1e293b">MyBackyardDwelling</text>
+  
+  <!-- Tagline -->
+  <text x="600" y="490" font-family="Inter, sans-serif" font-size="32" font-weight="400" text-anchor="middle" fill="#64748b">Unlock Your Property's ADU Potential</text>
+</svg> 
