@@ -373,9 +373,10 @@ const HeroSection = () => {
                           onChange={handleChange}
                           required
                           className={cn(
-                            "w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-brand-200 focus:border-brand-500 transition-standard",
+                            "w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-brand-200 focus:border-brand-500 transition-standard appearance-none h-[42px]",
                             isDarkTheme ? "border-gray-600 bg-gray-700 text-white" : "border-gray-300 bg-white text-gray-800"
                           )}
+                          style={{ backgroundPosition: "right 0.75rem center", backgroundRepeat: "no-repeat", backgroundSize: "1em" }}
                         >
                           <option value="">Select State</option>
                           <option value="MA">MA - Massachusetts</option>
