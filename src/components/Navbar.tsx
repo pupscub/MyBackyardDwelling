@@ -51,9 +51,18 @@ const Navbar = () => {
       path: "/#features",
       onClick: (e) => scrollToSection('features', e)
     },
-    { name: "How It Works", path: "/how-it-works" },
-    { name: "Success Stories", path: "/success-stories" },
-    { name: "Resources", path: "/resources" },
+    { name: "How It Works", 
+      path: "/how-it-works",
+      onClick: (e) => scrollToSection('how-it-works', e)
+    },
+    { name: "Success Stories", 
+      path: "/success-stories",
+      onClick: (e) => scrollToSection('success-stories', e)
+     },
+    { name: "Resources", 
+      path: "/resources",
+      onClick: (e) => scrollToSection('Resources', e)
+     },
   ];
 
   return (

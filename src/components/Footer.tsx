@@ -64,7 +64,7 @@ const Footer = () => {
           </div>
           
           {footerLinks.map((column) => (
-            <div key={column.title}>
+            <div key={column.title} id={column.title === "Resources" ? "Resources" : undefined}>
               <h3 className="font-medium text-lg mb-4 text-gray-800">{column.title}</h3>
               <ul className="space-y-3">
                 {column.links.map((link) => (
