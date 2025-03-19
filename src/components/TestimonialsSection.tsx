@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 const testimonials = [
@@ -28,6 +27,47 @@ const testimonials = [
 
 const TestimonialsSection = () => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const intervalRef = useRef(null);
+
+  // Function to advance to the next testimonial
+  const nextTestimonial = () => {
+    setActiveIndex((prevIndex) => (prevIndex + 1) % testimonials.length);
+  };
+
+  // Set up auto-scrolling with useEffect
+  useEffect(() => {
+    // Clear any existing interval when component re-renders
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    // Only set the interval if not paused
+    if (!isPaused) {
+      intervalRef.current = setInterval(() => {
+        nextTestimonial();
+      }, 5000); // 5 seconds interval
+    }
+
+    // Clean up the interval when component unmounts
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [isPaused]);
+
+  // Handle manual navigation
+  const handleButtonClick = (index) => {
+    // Pause auto-scrolling for a while when user interacts
+    setIsPaused(true);
+    setActiveIndex(index);
+    
+    // Resume auto-scrolling after 10 seconds of inactivity
+    setTimeout(() => {
+      setIsPaused(false);
+    }, 10000);
+  };
 
   return (
     <section id="success-stories" className="py-20 bg-white relative overflow-hidden">
@@ -90,7 +130,7 @@ const TestimonialsSection = () => {
             {testimonials.map((_, index) => (
               <button
                 key={index}
-                onClick={() => setActiveIndex(index)}
+                onClick={() => handleButtonClick(index)}
                 className={cn(
                   "w-3 h-3 rounded-full transition-all duration-300",
                   index === activeIndex ? "bg-brand-500 w-8" : "bg-gray-300 hover:bg-gray-400"
