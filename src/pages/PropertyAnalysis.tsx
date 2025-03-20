@@ -860,48 +860,6 @@ export default function PropertyAnalysis() {
                 </Button>
               </div>
             </div>
-
-            {/* Additional Notes */}
-            <div className={cn(
-              "rounded-xl border p-6 mb-10",
-              isDarkTheme ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"
-            )}>
-              <h3 className={cn(
-                "text-xl font-semibold mb-4",
-                isDarkTheme ? "text-white" : "text-gray-900"
-              )}>
-                Additional Notes
-              </h3>
-              <ul className="space-y-2">
-                {(propertyData?.propertyDetails?.additionalNotes || []).map((note, index) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <div className={cn(
-                      "p-1 rounded-full mt-0.5",
-                      isDarkTheme ? "bg-gray-700" : "bg-gray-100"
-                    )}>
-                      <Check className={cn(
-                        "h-4 w-4",
-                        isDarkTheme ? "text-gray-300" : "text-gray-700"
-                      )} />
-                    </div>
-                    <span className={isDarkTheme ? "text-gray-300" : "text-gray-700"}>
-                      {note}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Actions Bar */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button variant="outline" className="gap-2">
-                <Download className="h-4 w-4" />
-                Download Report
-              </Button>
-              <Button className="gap-2">
-                Schedule Consultation
-              </Button>
-            </div>
           </>
         )}
       </main>
