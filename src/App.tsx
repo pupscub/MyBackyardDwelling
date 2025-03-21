@@ -9,6 +9,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import Index from "./pages/Index";
 import Contact from "./pages/Contact";
 import PropertyAnalysis from '@/pages/PropertyAnalysis';
+import FAQ from './pages/faq';
 
 // Scroll to top helper component
 const ScrollToTop = () => {
@@ -62,7 +63,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/faq",
-    element: <ScrollToTop />,
+    element: <FAQ />,
   },
   {
     path: "*",

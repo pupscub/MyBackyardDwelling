@@ -63,6 +63,9 @@ const Navbar = () => {
       path: "/resources",
       onClick: (e) => scrollToSection('Resources', e)
      },
+    { name: "FAQ", 
+      path: "/faq"
+     },
   ];
 
   return (
@@ -130,7 +133,7 @@ const Navbar = () => {
             )
           ))}
           <Link
-            to="/contact"
+            to="/contact#get-in-touch"
             className="ml-4 px-6 py-2.5 rounded-full bg-sunnyellow text-gray-800 font-medium text-sm transition-standard hover:bg-sunnyellow/90 hover:shadow-md"
           >
             Contact Us
@@ -195,7 +198,7 @@ const Navbar = () => {
             )
           ))}
           <Link
-            to="/contact"
+            to="/contact#get-in-touch"
             className="block px-4 py-3 text-center rounded-md bg-sunnyellow text-gray-800 font-medium transition-standard hover:bg-sunnyellow/90"
             onClick={() => setIsOpen(false)}
           >

@@ -855,9 +855,11 @@ export default function PropertyAnalysis() {
                     </span>
                   </li>
                 </ul>
-                <Button className="w-full mt-4">
-                  Schedule Consultation
-                </Button>
+                <Link to="/contact#get-in-touch">
+                  <Button className="w-full mt-4">
+                    Schedule Consultation
+                  </Button>
+                </Link>
               </div>
             </div>
           </>

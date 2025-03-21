@@ -137,7 +137,7 @@ const Contact = () => {
 
       <main className="flex-grow pt-20">
         <div className="container px-4 md:px-6">
-          <div className="max-w-3xl mx-auto text-center mb-12 bg-gray-800 p-8 rounded-xl shadow-elevated">
+          <div id="get-in-touch" className="max-w-3xl mx-auto text-center mb-12 bg-gray-800 p-8 rounded-xl shadow-elevated">
             <h1 className="text-3xl md:text-4xl font-bold mb-4 text-sunnyellow">Get in Touch</h1>
             <p className="text-lg text-white">
               Have questions about ADUs or want to start your project? Contact our team for personalized assistance.

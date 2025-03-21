@@ -19,7 +19,7 @@ const Footer = () => {
       title: "Company",
       links: [
         { name: "About Us", path: "/", onClick: handleAboutUsClick },
-        { name: "Contact", path: "/contact" },
+        { name: "Contact", path: "/contact#get-in-touch" },
       ],
     },
     {

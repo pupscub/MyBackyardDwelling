@@ -143,7 +143,7 @@ const TestimonialsSection = () => {
         
         <div className="mt-16 text-center">
           <a 
-            href="#property-analyzer" 
+            href="/contact#get-in-touch" 
             className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-brand-500 text-white font-medium transition-standard hover:bg-brand-600 hover:shadow-md"
           >
             Start Your ADU Journey Today
