@@ -10,6 +10,8 @@ import Index from "./pages/Index";
 import Contact from "./pages/Contact";
 import PropertyAnalysis from '@/pages/PropertyAnalysis';
 import FAQ from './pages/faq';
+import { Analytics } from '@vercel/analytics/next';
+
 
 // Scroll to top helper component
 const ScrollToTop = () => {
@@ -80,6 +82,7 @@ const App = () => (
         <RouterProvider router={router} />
         <ThemeToggle />
       </TooltipProvider>
+      <Analytics />
     </ThemeProvider>
   </QueryClientProvider>
 );
