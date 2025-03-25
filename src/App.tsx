@@ -10,7 +10,7 @@ import Index from "./pages/Index";
 import Contact from "./pages/Contact";
 import PropertyAnalysis from '@/pages/PropertyAnalysis';
 import FAQ from './pages/faq';
-import { Analytics } from '@vercel/analytics/next';
+import { Analytics } from '@vercel/analytics/react';
 
 
 // Scroll to top helper component
@@ -81,6 +81,7 @@ const App = () => (
         <Sonner />
         <RouterProvider router={router} />
         <ThemeToggle />
+        <Analytics />
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
