@@ -82,7 +82,6 @@ const App = () => (
         <RouterProvider router={router} />
         <ThemeToggle />
       </TooltipProvider>
-      <Analytics />
     </ThemeProvider>
   </QueryClientProvider>
 );
