@@ -38,6 +38,76 @@ interface PropertyData {
   service_available: boolean;
 }
 
+// City-specific property data
+const CITY_PROPERTY_DATA: Record<string, {
+  lotSize?: string;
+  setbacks: {
+    front: string;
+    back: string;
+    sides: string;
+  };
+  maxAduSize: string;
+  allowsAdu: boolean | string;
+}> = {
+  'boston': {
+    lotSize: '-',
+    setbacks: {
+      front: 'Per zoning code',
+      back: 'Per zoning code',
+      sides: 'Per zoning code'
+    },
+    maxAduSize: 'Maximum size: 900 square feet, The ADU cannot exceed half the size of the primary dwelling or 900 square feet, whichever is smaller.',
+    allowsAdu: true
+  },
+  'carlisle': {
+    lotSize: '1 Acres lot',
+    setbacks: {
+      front: 'Same as principal dwelling or accessory structure setbacks',
+      back: 'Same as principal dwelling or accessory structure setbacks',
+      sides: 'Same as principal dwelling or accessory structure setbacks'
+    },
+    maxAduSize: '900 sq. ft. (Protected Use) or up to 1,200 sq. ft. (Special Permit)',
+    allowsAdu: true
+  },
+  'tewksbury': {
+    lotSize: '1.08 Acres',
+    setbacks: {
+      front: 'Per district zoning',
+      back: 'Per district zoning',
+      sides: 'Per district zoning'
+    },
+    maxAduSize: '1,000 sq. ft. (with Planning Board approval)',
+    allowsAdu: true
+  },
+  'milton': {
+    lotSize: '-',
+    setbacks: {
+      front: '20–40 ft',
+      back: '10–30 ft',
+      sides: '8–30 ft'
+    },
+    maxAduSize: 'Not specified; must maintain single-family appearance',
+    allowsAdu: 'special_permit'
+  }
+};
+
+// Function to get property data based on city and address
+const getCitySpecificPropertyData = (city: string, address: string) => {
+  // Normalize city name for comparison
+  const normalizedCity = city.toLowerCase().trim();
+  
+  // Check for specific address exceptions
+  if (address.toLowerCase().includes('75 st alphonsus street') && normalizedCity === 'boston') {
+    return {
+      ...CITY_PROPERTY_DATA['boston'],
+      allowsAdu: false
+    };
+  }
+  
+  // Return city-specific data if available
+  return CITY_PROPERTY_DATA[normalizedCity] || null;
+};
+
 // Convert Supabase data format to frontend format
 const mapSupabaseToFrontend = (data: SupabasePropertyData | null): PropertyData => {
   console.log("Inside mapSupabaseToFrontend with data:", data);
@@ -77,6 +147,27 @@ const mapSupabaseToFrontend = (data: SupabasePropertyData | null): PropertyData 
     // Generate satellite image URL if not provided from database
     const satelliteImageUrl = data.satellite_image_url || generateSatelliteImageUrl(data.address);
     
+    // Check if we have city-specific data
+    const cityData = getCitySpecificPropertyData(data.city || "", data.address);
+    console.log("City-specific data for", data.city, ":", cityData);
+    
+    // Determine ADU eligibility and prepare additional notes
+    let allowsAdu = data.allows_adu;
+    let additionalNotes = data.additional_notes || [];
+    
+    if (cityData) {
+      if (cityData.allowsAdu === 'special_permit') {
+        allowsAdu = true;
+        additionalNotes.push("Your Property needs special permit for an ADU");
+      } else if (cityData.allowsAdu === false) {
+        allowsAdu = false;
+        additionalNotes.push("Your Property Does not Qualify for an ADU");
+      } else if (cityData.allowsAdu === true) {
+        allowsAdu = true;
+        additionalNotes.push("Your Property Qualifies for an ADU");
+      }
+    }
+    
     return {
       address: data.address || "Unknown address",
       firstName: data.first_name || "User",
@@ -87,16 +178,16 @@ const mapSupabaseToFrontend = (data: SupabasePropertyData | null): PropertyData 
       state: data.state || "",
       zip_code: data.zip_code || "",
       propertyDetails: {
-        lotSize: data.lot_size || 'Not available',
+        lotSize: cityData?.lotSize || data.lot_size || 'Not available',
         zoning: data.zoning || 'Not available',
-        allowsAdu: data.allows_adu ?? true, // Use nullish coalescing to ensure boolean
-        maxAduSize: data.max_adu_size || 'Not available',
+        allowsAdu: allowsAdu ?? true, // Use nullish coalescing to ensure boolean
+        maxAduSize: cityData?.maxAduSize || data.max_adu_size || 'Not available',
         setbacks: {
-          front: data.setback_front || 'Not available',
-          back: data.setback_back || 'Not available',
-          sides: data.setback_sides || 'Not available',
+          front: cityData?.setbacks.front || data.setback_front || 'Not available',
+          back: cityData?.setbacks.back || data.setback_back || 'Not available',
+          sides: cityData?.setbacks.sides || data.setback_sides || 'Not available',
         },
-        additionalNotes: data.additional_notes || ['Your property details are being processed.'],
+        additionalNotes: additionalNotes,
       },
       satelliteImageUrl: satelliteImageUrl,
       generatedAt: data.created_at || new Date().toISOString(),
