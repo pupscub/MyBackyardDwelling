@@ -95,12 +95,35 @@ const CITY_PROPERTY_DATA: Record<string, {
 const getCitySpecificPropertyData = (city: string, address: string) => {
   // Normalize city name for comparison
   const normalizedCity = city.toLowerCase().trim();
+  const normalizedAddress = address.toLowerCase().trim();
   
-  // Check for specific address exceptions
-  if (address.toLowerCase().includes('75 st alphonsus street') && normalizedCity === 'boston') {
+  // Check for specific addresses
+  if (normalizedAddress.includes('75 st alphonsus street') && normalizedCity === 'boston') {
     return {
       ...CITY_PROPERTY_DATA['boston'],
+      lotSize: '1.99 Acres',
       allowsAdu: false
+    };
+  }
+  
+  if (normalizedAddress.includes('86 lafayette street') && normalizedCity === 'milton') {
+    return {
+      ...CITY_PROPERTY_DATA['milton'],
+      lotSize: '0.46 Acres'
+    };
+  }
+  
+  if (normalizedAddress.includes('163 rogers street') && normalizedCity === 'tewksbury') {
+    return {
+      ...CITY_PROPERTY_DATA['tewksbury'],
+      lotSize: '1.08 Acres'
+    };
+  }
+  
+  if (normalizedAddress.includes('125 maple street') && normalizedCity === 'carlisle') {
+    return {
+      ...CITY_PROPERTY_DATA['carlisle'],
+      lotSize: '1 Acres'
     };
   }
   
